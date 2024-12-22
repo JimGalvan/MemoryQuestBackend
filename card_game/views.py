@@ -1,3 +1,6 @@
 from django.shortcuts import render
+from .models import Card
 
-# Create your views here.
+def game_view(request):
+    cards = Card.objects.all()
+    return render(request, 'card_game/game.html', {'cards': cards})
