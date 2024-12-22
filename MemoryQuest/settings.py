@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -127,7 +128,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ASGI_APPLICATION = "MemoryQuest.asgi.application"
+ASGI_APPLICATION = 'MemoryQuest.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
@@ -138,3 +139,7 @@ CHANNEL_LAYERS = {
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",  # Frontend origin
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+ALLOWED_HOSTS = ['*']

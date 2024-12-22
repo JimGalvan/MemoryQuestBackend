@@ -4,6 +4,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class MemoryGameConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.game_group_name = None
+        self.game_id = None
+
     async def connect(self):
         self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
         self.game_group_name = f"game_{self.game_id}"
