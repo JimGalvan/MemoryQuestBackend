@@ -1,5 +1,17 @@
 import json
+import random
+
 from channels.generic.websocket import AsyncWebsocketConsumer
+
+
+def generate_board():
+    colors = ["#FF5733", "#33FF57", "#3357FF", "#FFC300", "#C70039", "#900C3F"]
+    pairs = []
+    for i in range(4):
+        pairs.append({"number": i + 1, "color": colors[i % len(colors)]})
+        pairs.append({"number": i + 1, "color": colors[i % len(colors)]})
+    random.shuffle(pairs)
+    return pairs
 
 
 class MemoryGameConsumer(AsyncWebsocketConsumer):
@@ -9,7 +21,7 @@ class MemoryGameConsumer(AsyncWebsocketConsumer):
 
         # Initialize game state (store in-memory or use a persistent store)
         self.game_state = {
-            "board": self.generate_board(),  # Randomized board data
+            "board": generate_board(),  # Randomized board data
             "flipped_cards": [],
             "matched_pairs": []
         }
@@ -17,6 +29,12 @@ class MemoryGameConsumer(AsyncWebsocketConsumer):
         # Join the group
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+
+        # send the initial board state
+        await self.send(text_data=json.dumps({
+            "type": "board_state",
+            "board": self.game_state["board"]
+        }))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -50,17 +68,36 @@ class MemoryGameConsumer(AsyncWebsocketConsumer):
             if is_match:
                 matched_pairs.extend(flipped_cards)
                 self.game_state["flipped_cards"] = []
-                await self.send_game_update(card_index, match=True)
-            else:
-                await self.send_game_update(card_index, match=False)
-                # Reset flipped cards after a delay
                 await self.channel_layer.group_send(
                     self.group_name,
-                    {"type": "reset_flipped_cards"}
+                    {
+                        "type": "game_update",
+                        "card_indices": flipped_cards,
+                        "match": True,
+                    }
                 )
+            else:
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    {
+                        "type": "game_update",
+                        "card_indices": flipped_cards,
+                        "match": False,
+                    }
+                )
+                # Reset flipped cards after a delay
+                self.game_state["flipped_cards"] = []
+
         else:
             # Send flip update to all clients
-            await self.send_game_update(card_index, match=None)
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "game_update",
+                    "card_indices": [card_index],
+                    "match": None,
+                }
+            )
 
     async def send_game_update(self, card_index, match):
         await self.channel_layer.group_send(
@@ -79,7 +116,3 @@ class MemoryGameConsumer(AsyncWebsocketConsumer):
     async def game_update(self, event):
         await self.send(text_data=json.dumps(event))
 
-    def generate_board(self):
-        colors = ["#FF5733", "#33FF57", "#3357FF", "#FFC300", "#C70039", "#900C3F"]
-        pairs = [{"number": i + 1, "color": colors[i % len(colors)]} for i in range(4)] * 2
-        return pairs
