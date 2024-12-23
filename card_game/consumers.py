@@ -15,9 +15,21 @@ def generate_board():
 
 
 class MemoryGameConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.game_state = None
+        self.group_name = None
+        self.game_id = None
+
     async def connect(self):
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.group_name = f"game_{self.game_id}"
+        player_name = self.scope['user'].username
+        room_id = self.scope['user'].id
+        join_code = self.scope['user'].join_code
+
+        # verify if user is allowed to join the game
+
 
         # Initialize game state (store in-memory or use a persistent store)
         self.game_state = {
