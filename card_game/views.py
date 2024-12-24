@@ -76,5 +76,6 @@ def join_room(request):
 
     player = Player.objects.create(name=player_name)
     room.players.add(player)
+    serializer = RoomSerializer(room)
 
-    return JsonResponse({"room_id": room.id}, status=200)
+    return JsonResponse(serializer.data, status=200)
