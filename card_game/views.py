@@ -46,7 +46,14 @@ def get_room(request, room_id):
         return JsonResponse({"error": "Invalid join code"}, status=400)
 
     players = room.players.all()
-    players_data = [{"id": player.id, "name": player.name} for player in players]
+    players_data = [{"id": player.id, "name": player.name, "isOwner": False} for player in players]
+
+    # Determine Player ownership
+    owner_id = room.owner.id
+    for player in players_data:
+        if player["id"] == owner_id:
+            player["isOwner"] = True
+            break
 
     return JsonResponse({"players": players_data}, status=200)
 
