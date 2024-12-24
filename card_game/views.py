@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
 from card_game.models import Room, Player
+from card_game.serializers import RoomSerializer
 
 
 def generate_join_code():
@@ -55,7 +56,8 @@ def get_room(request, room_id):
             player["isOwner"] = True
             break
 
-    return JsonResponse({"players": players_data}, status=200)
+    serializer = RoomSerializer(room)
+    return JsonResponse(serializer.data, status=200)
 
 
 @api_view(["POST"])
